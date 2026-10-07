@@ -1,11 +1,10 @@
-//cinematica 3d
-
+//3d kinematics
 
 #include <Servo.h>
-#include <LiquidCrystal_I2C.h> //display lcd e wire para sda scl
+#include <LiquidCrystal_I2C.h> 
 #include <Wire.h> 
 
-//cinematica definicoes
+//kinematics definitions
 #define L1 14
 #define L2 12
 #define L3 9
@@ -15,7 +14,7 @@ float z;
 float psi;
 bool debug;
 int delay2 = 2500;
-int delayCurto = 100;
+int shortDelay = 100;
 
 //ldc
 #define adress  0x27 // Endereços comuns: 0x27, 0x3F
@@ -47,45 +46,45 @@ int vryValue;
 bool butState;
 bool swState;
 
-//escolha
+//two options
 int elbowValueA;
 int shoulderValueA;
 int elbowValueB;
 int shoulderValueB;
 
-//outros
+//others
 int valueReceived;
-unsigned long pausa;
+unsigned long pause;
 bool turn;
 int j;
 int k;
 int i;
 
 
-//objetos
+//objects
 LiquidCrystal_I2C lcd(adress, collums, rows);
 Servo base;
 Servo shoulder;
 Servo elbow;
-Servo wrist;   //invertido [menos é mais e mais é menos]
+Servo wrist;   //inverted
 Servo gripper;
 
-//funcoes
+//functions
 void IK(float x, float y, float psi, bool debug);
-//int percurso(int i, int pausa, int max, int increment = 1);
+// "test": int percurso(int i, int pause, int max, int increment = 1);
 
 void setup() {
   
-  lcd.init(); // INICIA A COMUNICAÇÃO COM O DISPLAY
-  lcd.backlight(); // LIGA A ILUMINAÇÃO DO DISPLAY
-  lcd.clear(); // LIMPA O DISPLAY
+  lcd.init(); 
+  lcd.backlight(); 
+  lcd.clear();
 
   pinMode(but, INPUT_PULLUP);
   pinMode(sw, INPUT_PULLUP);
   pinMode(vrx, INPUT);
   pinMode(vry, INPUT);
 
-  //configuracao dos servos e posicao inicial 90 graus
+  //servo configurations and home position
   base.attach(servo1);
   shoulder.attach(servo4);
   elbow.attach(servo2);
@@ -97,21 +96,20 @@ void setup() {
   wrist.write(wristHomePosition);
   gripper.write(gripperHomePosition);
 
+  //serial communication
   Serial.begin(9600); 
-
-  //cinematica
 }
 
 void loop() {
 
   lcd.setCursor(0, 0);
   lcd.print("shoulder: elbow:");
-  lcd.setCursor(0, 1); // POSICIONA O CURSOR NA PRIMEIRA COLUNA DA LINHA 2
+  lcd.setCursor(0, 1); 
   lcd.print(404);
-  lcd.setCursor(8, 1); // POSICIONA O CURSOR NA oitava COLUNA DA LINHA 2
+  lcd.setCursor(8, 1); 
   lcd.print(404);
 
-  //pegar valores no monitor serial
+  //take values in the serial monitor
   if(false){ 
       switch(valueReceived){ 
       case 0:
@@ -131,7 +129,7 @@ void loop() {
           break;
 
       case 2:
-        Serial.println("garra angulo: ");
+        Serial.println("gripper angles: ");
         if(Serial.available() > 0){
             psi = Serial.parseInt();
           valueReceived = 0;
@@ -140,7 +138,7 @@ void loop() {
       }
   }
 
-  //cinematcia 
+  //kinematics
   
     gripper.write(130);
     IK(29, -5, 0, -90, true);
@@ -149,43 +147,43 @@ void loop() {
     delay(delay2);
     for(i = 0; i<= 10; i++){
       IK(20, 20, i, 0, true);
-      delay(delayCurto);
+      delay(shortDelay);
     }
     for(i = 20; i>= -5; i--){
       IK(20, i, 10, -90, true);
-      delay(delayCurto);
+      delay(shortDelay);
     }
     IK(17,-5, 10, -90, true);
-    delay(delayCurto);
+    delay(shortDelay);
     for(i = -5; i<= 20; i++){
       IK(20, i, 10, -90, true);
-      delay(delayCurto);
+      delay(shortDelay);
     }
     IK(20,20, 10, -90, true);
     delay(delay2);
     for(i = 20; i>= -5; i--){
       IK(20, i, 10, -90, true);
-      delay(delayCurto);
+      delay(shortDelay);
     }
     for(i = 10; i<= -10; i++){
       IK(20, -5, i, -90, true);
-      delay(delayCurto);
+      delay(shortDelay);
     }
     IK(20,-5, -10, -90, true);
     delay(delay2);
     for(i = -5; i<= 20; i++){
       IK(20, i, -10, -90, true);
-      delay(delayCurto);
+      delay(shortDelay);
     }
     for(i = -10; i<= 0; i++){
       IK(20, 20, i, -90, true);
-      delay(delayCurto);
+      delay(shortDelay);
     }
     delay(delay2);
   
 }
 
-
+//inverse kinematics function
 void IK(float x, float y, float z, float psi, bool debug){
   double theta4 = atan2(z,x) ;
   double x2 = x/(cos(theta4));
